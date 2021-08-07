@@ -1,4 +1,11 @@
--------------------------------------------------------------------------------
+use work.fixed_package.all;
+package neuron_pkg is
+	type fixed_vector is array (natural range <>, fixed_range range <>) of bit;
+	function Activation1 (X : fixed) return fixed;
+	function Activation2 (X : fixed) return fixed;
+end package;
+package body neuron_pkg is
+	-------------------------------------------------------------------------------
 -- Activation_function_tb.vhd
 -- Testbench for Activation functions
 -- Input
@@ -172,3 +179,53 @@ begin
 		wait;
 	end process activ_tb;
 end testbench;
+end package body;
+
+
+use work.neuron_pkg.all;
+use work.fixed_package.all;
+-- Entidade NEURON:
+--
+-- Parametro de entrada:
+-- 	X : fixed ? Dados [0,1]
+-- 	W : fixed ? Pesos [0,1]
+-- 	B : fixed ? Bias [0,1]
+-- Parametro de saida:
+-- 	Y : fixed [0,1]
+	
+entity neuron is
+	generic (
+		Dendritos: integer := 2;
+		Q_left : fixed_range := 3;
+		Q_right : fixed_range := -12
+	);
+	port (
+		X : in fixed_vector(Dendritos-1 downto 0, Q_left downto Q_right);
+		W : in fixed_vector(Dendritos-1 downto 0, Q_left downto Q_right);
+		B : in fixed(Q_left downto Q_right);
+		Y : out fixed(Q_left downto Q_right)
+	);
+end entity;
+architecture structural of neuron is
+begin
+	process(X, W, B)
+		variable v : fixed(Q_left downto Q_right);
+		variable X_tmp, W_tmp : fixed(Q_left downto Q_right);
+	begin
+		v := (others => '0');	--v := -B;
+		for i in Dendritos-1 downto 0 loop
+			for j in Q_left downto Q_right loop
+				W_tmp(j) := W(i,j);
+				X_tmp(j) := X(i,j);
+			end loop;
+			v := v + W_tmp * X_tmp;
+		end loop;
+		v := v - B;
+		Y <= Activation1(v);
+	end process;
+end structural;
+
+
+
+
+
